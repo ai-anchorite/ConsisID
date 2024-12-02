@@ -2,7 +2,7 @@ import os
 import math
 import time
 import numpy
-import spaces
+# import spaces
 import random
 import threading
 import gradio as gr
@@ -112,10 +112,10 @@ pipe.to(device)
 
 # Enable CPU offload for the model.
 # turn on if you don't have multiple GPUs or enough GPU memory(such as H100) and it will cost more time in inference, it may also reduce the quality
-# pipe.enable_model_cpu_offload()
-# pipe.enable_sequential_cpu_offload()
-# pipe.vae.enable_slicing()
-# pipe.vae.enable_tiling()
+pipe.enable_model_cpu_offload()
+pipe.enable_sequential_cpu_offload()
+pipe.vae.enable_slicing()
+pipe.vae.enable_tiling()
 
 os.makedirs("./output", exist_ok=True)
 os.makedirs("./gradio_tmp", exist_ok=True)
@@ -382,5 +382,4 @@ with gr.Blocks() as demo:
  
 
 if __name__ == "__main__":
-    demo.queue(max_size=15)
-    demo.launch()
+    demo.launch(share=False)
