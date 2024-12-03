@@ -1,7 +1,7 @@
 # torch==2.5.1
 # torchaudio==2.5.1
 # torchvision==0.20.1
-xformers==0.0.28.post3
+# xformers==0.0.28.post3
 onnx==1.17.0
 onnxruntime-gpu==1.19.2
 # deepspeed==0.15.2
