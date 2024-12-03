@@ -123,7 +123,7 @@ os.makedirs("./gradio_tmp", exist_ok=True)
 upscale_model = load_sd_upscale("model_real_esran/RealESRGAN_x4.pth", device)
 frame_interpolation_model = load_rife_model("model_rife")
 
-@spaces.GPU(duration=180)
+# @spaces.GPU(duration=180)
 def generate(
     prompt: str,
     image_input: str,
@@ -202,56 +202,47 @@ def convert_to_gif(video_path):
     return gif_path
 
 
-def delete_old_files():
-    while True:
-        now = datetime.now()
-        cutoff = now - timedelta(minutes=10)
-        directories = ["./output", "./gradio_tmp"]
+# def delete_old_files():
+    # while True:
+        # now = datetime.now()
+        # cutoff = now - timedelta(minutes=10)
+        # directories = ["./output", "./gradio_tmp"]
 
-        for directory in directories:
-            for filename in os.listdir(directory):
-                file_path = os.path.join(directory, filename)
-                if os.path.isfile(file_path):
-                    file_mtime = datetime.fromtimestamp(os.path.getmtime(file_path))
-                    if file_mtime < cutoff:
-                        os.remove(file_path)
-        time.sleep(600)
+        # for directory in directories:
+            # for filename in os.listdir(directory):
+                # file_path = os.path.join(directory, filename)
+                # if os.path.isfile(file_path):
+                    # file_mtime = datetime.fromtimestamp(os.path.getmtime(file_path))
+                    # if file_mtime < cutoff:
+                        # os.remove(file_path)
+        # time.sleep(600)
 
 
-threading.Thread(target=delete_old_files, daemon=True).start()
+# threading.Thread(target=delete_old_files, daemon=True).start()
+
 examples_images = [
     ["asserts/example_images/1.png", "A woman adorned with a delicate flower crown, is standing amidst a field of gently swaying wildflowers. Her eyes sparkle with a serene gaze, and a faint smile graces her lips, suggesting a moment of peaceful contentment. The shot is framed from the waist up, highlighting the gentle breeze lightly tousling her hair. The background reveals an expansive meadow under a bright blue sky, capturing the tranquility of a sunny afternoon."],
     ["asserts/example_images/2.png", "The video captures a boy walking along a city street, filmed in black and white on a classic 35mm camera. His expression is thoughtful, his brow slightly furrowed as if he's lost in contemplation. The film grain adds a textured, timeless quality to the image, evoking a sense of nostalgia. Around him, the cityscape is filled with vintage buildings, cobblestone sidewalks, and softly blurred figures passing by, their outlines faint and indistinct. Streetlights cast a gentle glow, while shadows play across the boy's path, adding depth to the scene. The lighting highlights the boy's subtle smile, hinting at a fleeting moment of curiosity. The overall cinematic atmosphere, complete with classic film still aesthetics and dramatic contrasts, gives the scene an evocative and introspective feel."],
     ["asserts/example_images/3.png", "The video depicts a man sitting at an office desk, engaged in his work. He is dressed in a formal suit and appears to be focused on his computer screen. The office environment is well-organized, with shelves filled with binders and other office supplies neatly arranged. The man is holding a red cup, possibly containing a beverage, which he drinks from before setting it down on the desk. He then proceeds to type on the keyboard, indicating that he is working on something on his computer. The overall atmosphere of the video suggests a professional setting where the man is diligently working on his tasks."]
 ]
 
-with gr.Blocks() as demo:
-    gr.Markdown("""
-           <div style="text-align: center; font-size: 32px; font-weight: bold; margin-bottom: 20px;">
-               ConsisID Space🤗
-           </div>
-           <div style="text-align: center;">
-               <a href="https://huggingface.co/BestWishYsh/ConsisID">🤗 Model Hub</a> |
-               <a href="https://huggingface.co/datasets/BestWishYsh/ConsisID-preview-Data">📚 Dataset</a> |
-               <a href="https://github.com/PKU-YuanGroup/ConsisID">🌐 Github</a> |
-               <a href="https://pku-yuangroup.github.io/ConsisID">📝 Page</a> |
-               <a href="https://huggingface.co/papers/2411.17440">📜 arxiv </a>
-           </div>
-           <div style="text-align: center;display: flex;justify-content: center;align-items: center;margin-top: 1em;margin-bottom: .5em;">
-              <span>If the Space is too busy, duplicate it to use privately</span>
-              <a href="https://huggingface.co/spaces/BestWishYsh/ConsisID-Space?duplicate=true"><img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/duplicate-this-space-lg.svg" width="160" style="
-                margin-left: .75em;
-            "></a>
-           </div>
-           <div style="text-align: center; font-size: 15px; font-weight: bold; color: red; margin-bottom: 20px;">
-            ⚠️ This demo is for academic research and experiential use only. 
-            </div>
-           """)
+css = """
+
+.image-container .image-custom {
+    max-width: 100% !important;
+    max-height: 80vh !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+"""
+
+with gr.Blocks(css=css) as demo:
     with gr.Row():
         with gr.Column():
             with gr.Accordion("IPT2V: Face Input", open=True):
-                image_input = gr.Image(label="Input Image (should contain clear face)")
-                prompt = gr.Textbox(label="Prompt (Less than 200 Words)", placeholder="Enter your prompt here. ConsisID has high requirements for prompt quality. You can use GPT-4o to refine the input text prompt, example can be found on our github.", lines=5)
+                image_input = gr.Image(label="Input Image (should contain clearly visible face)", elem_classes=["image-custom"])
+                prompt = gr.Textbox(label="Prompt (Less than 200 Words)", placeholder="Enter your prompt here. ConsisID has high requirements for prompt quality. You can use GPT-4o to refine the input text prompt, examples can be found below.", lines=5)
             with gr.Accordion("Examples", open=False):
                 examples_component_images = gr.Examples(
                     examples_images,
@@ -263,7 +254,7 @@ with gr.Blocks() as demo:
                 with gr.Column():
                     with gr.Row():
                         seed_param = gr.Number(
-                            label="Inference Seed (Enter a positive number, -1 for random)", value=42
+                            label="Inference Seed (Enter a positive number, -1 for random)", value=-1
                         )
                     with gr.Row():
                         enable_scale = gr.Checkbox(label="Super-Resolution (720 × 480 -> 2880 × 1920)", value=False)
@@ -281,70 +272,85 @@ with gr.Blocks() as demo:
                 download_gif_button = gr.File(label="📥 Download GIF", visible=False)
                 seed_text = gr.Number(label="Seed Used for Video Generation", visible=False)
 
-    gr.Markdown("""
-    <table border="0" style="width: 100%; text-align: left; margin-top: 20px;">
-        <div style="text-align: center; font-size: 32px; font-weight: bold; margin-bottom: 20px;">
-            🎥 Video Gallery
-        </div>
-        <tr>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>The video features a woman in exquisite hybrid armor adorned with iridescent gemstones, standing amidst gently falling cherry blossoms. Her piercing yet serene gaze hints at quiet determination, as a breeze catches a loose strand of her hair. She stands in a tranquil courtyard framed by moss-covered stone walls and wooden arches, with blossoms casting soft shadows on the ground. The petals swirl around her, adding a dreamlike quality, while the blurred backdrop emphasizes her poised figure. The scene conveys elegance, strength, and tranquil readiness, capturing a moment of peace before an upcoming challenge.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/97fa0710-4f14-4a6d-b6f7-f3a2e9f7486e" width="100%" controls autoplay loop></video>
-            </td>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>The video features a baby wearing a bright superhero cape, standing confidently with arms raised in a powerful pose. The baby has a determined look on their face, with eyes wide and lips pursed in concentration, as if ready to take on a challenge. The setting appears playful, with colorful toys scattered around and a soft rug underfoot, while sunlight streams through a nearby window, highlighting the fluttering cape and adding to the impression of heroism. The overall atmosphere is lighthearted and fun, with the baby's expressions capturing a mix of innocence and an adorable attempt at bravery, as if truly ready to save the day.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/90b547a3-247c-4bb0-abae-ba53483b7b6e" width="100%" controls autoplay loop></video>
-            </td>
-        </tr>
-        <tr>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>The video features a man standing next to an airplane, engaged in a conversation on his cell phone. he is wearing sunglasses and a black top, and he appears to be talking seriously. The airplane has a green stripe running along its side, and there is a large engine visible behind his. The man seems to be standing near the entrance of the airplane, possibly preparing to board or just having disembarked. The setting suggests that he might be at an airport or a private airfield. The overall atmosphere of the video is professional and focused, with the man's attire and the presence of the airplane indicating a business or travel context.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/55680c58-de86-48b4-8d86-e9906a3185c3" width="100%" controls autoplay loop></video>
-            </td>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>The video features a woman with blonde hair standing on a beach near the water's edge. She is wearing a black swimsuit and appears to be enjoying her time by the sea. The sky above is clear with some clouds, and the ocean waves gently lap against the shore. The woman seems to be holding something white in her hand, possibly a piece of driftwood or a small object found on the beach. The overall atmosphere of the video is serene and relaxing, capturing the beauty of nature and the simple pleasure of being by the ocean.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/8d06e702-f80e-4cb2-abc2-b0f519ec3f11" width="100%" controls autoplay loop></video>
-            </td>
-        </tr>
-        <tr>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>The video features a man sitting in a red armchair, enjoying a cup of coffee or tea. he is dressed in a light-colored outfit and has long dark-haired hair. The setting appears to be indoors, with large windows providing a view of a misty or foggy coastal landscape outside. The room has a modern design with geometric structures visible in the background. There is a small round table next to the armchair, also holding a cup. The overall atmosphere suggests a calm and serene moment, possibly during a cold or rainy day by the sea.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/ab9c655e-84c2-47ed-85d9-039a7f64adfe" width="100%" controls autoplay loop></video>
-            </td>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>The video shows a young boy sitting at a table, eating a piece of food. He appears to be enjoying his meal, as he takes a bite and chews it. The boy is wearing a blue shirt and has short hair. The background is dark, with some light coming from the left side of the frame. There is a straw visible on the right side of the frame, suggesting that there may be a drink next to the boy's plate. The overall atmosphere of the video seems casual and relaxed, with the focus on the boy's enjoyment of his food.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/8014b02e-e1c4-4df7-b7f3-cebfb01fa373" width="100%" controls autoplay loop></video>
-            </td>
-        </tr>
-        <tr>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>The video captures a boy walking along a city street, filmed in black and white on a classic 35mm camera. His expression is thoughtful, his brow slightly furrowed as if he's lost in contemplation. The film grain adds a textured, timeless quality to the image, evoking a sense of nostalgia. Around him, the cityscape is filled with vintage buildings, cobblestone sidewalks, and softly blurred figures passing by, their outlines faint and indistinct. Streetlights cast a gentle glow, while shadows play across the boy's path, adding depth to the scene. The lighting highlights the boy's subtle smile, hinting at a fleeting moment of curiosity. The overall cinematic atmosphere, complete with classic film still aesthetics and dramatic contrasts, gives the scene an evocative and introspective feel.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/e4bc3169-d3d4-46e2-a667-8b456ead9465" width="100%" controls autoplay loop></video>
-            </td>
-            <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
-                <p>The video features a young man standing outdoors in a snowy park. he is wearing a colorful winter jacket with a floral pattern and a white knit hat. The background shows a snowy landscape with trees, benches, and a metal fence. The ground is covered in snow, and there is a light snowfall in the air. The man appears to be enjoying the winter weather, as he smiles and gives a thumbs-up gesture towards the camera. The overall atmosphere of the video is cheerful and festive, capturing the beauty of a snowy day in a park.</p>
-            </td>
-            <td style="width: 25%; vertical-align: top;">
-                <video src="https://github.com/user-attachments/assets/e4e3e519-95d4-44e0-afa7-9a833f99e090" width="100%" controls autoplay loop></video>
-            </td>
-        </tr>
-    </table>
-        """)
-
+    with gr.Row():
+        with gr.Accordion("Demo Gallery", open=False):
+            gr.Markdown("""
+            <table border="0" style="width: 100%; text-align: left; margin-top: 20px;">
+                <div style="text-align: center; font-size: 32px; font-weight: bold; margin-bottom: 20px;">
+                    🎥 Video Gallery
+                </div>
+                <tr>
+                    <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
+                        <p>The video features a woman in exquisite hybrid armor adorned with iridescent gemstones, standing amidst gently falling cherry blossoms. Her piercing yet serene gaze hints at quiet determination, as a breeze catches a loose strand of her hair. She stands in a tranquil courtyard framed by moss-covered stone walls and wooden arches, with blossoms casting soft shadows on the ground. The petals swirl around her, adding a dreamlike quality, while the blurred backdrop emphasizes her poised figure. The scene conveys elegance, strength, and tranquil readiness, capturing a moment of peace before an upcoming challenge.</p>
+                    </td>
+                    <td style="width: 25%; vertical-align: top;">
+                        <video src="https://github.com/user-attachments/assets/97fa0710-4f14-4a6d-b6f7-f3a2e9f7486e" width="100%" controls autoplay loop></video>
+                    </td>
+                    <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
+                        <p>The video features a baby wearing a bright superhero cape, standing confidently with arms raised in a powerful pose. The baby has a determined look on their face, with eyes wide and lips pursed in concentration, as if ready to take on a challenge. The setting appears playful, with colorful toys scattered around and a soft rug underfoot, while sunlight streams through a nearby window, highlighting the fluttering cape and adding to the impression of heroism. The overall atmosphere is lighthearted and fun, with the baby's expressions capturing a mix of innocence and an adorable attempt at bravery, as if truly ready to save the day.</p>
+                    </td>
+                    <td style="width: 25%; vertical-align: top;">
+                        <video src="https://github.com/user-attachments/assets/90b547a3-247c-4bb0-abae-ba53483b7b6e" width="100%" controls autoplay loop></video>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
+                        <p>The video features a man standing next to an airplane, engaged in a conversation on his cell phone. he is wearing sunglasses and a black top, and he appears to be talking seriously. The airplane has a green stripe running along its side, and there is a large engine visible behind his. The man seems to be standing near the entrance of the airplane, possibly preparing to board or just having disembarked. The setting suggests that he might be at an airport or a private airfield. The overall atmosphere of the video is professional and focused, with the man's attire and the presence of the airplane indicating a business or travel context.</p>
+                    </td>
+                    <td style="width: 25%; vertical-align: top;">
+                        <video src="https://github.com/user-attachments/assets/55680c58-de86-48b4-8d86-e9906a3185c3" width="100%" controls autoplay loop></video>
+                    </td>
+                    <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
+                        <p>The video features a woman with blonde hair standing on a beach near the water's edge. She is wearing a black swimsuit and appears to be enjoying her time by the sea. The sky above is clear with some clouds, and the ocean waves gently lap against the shore. The woman seems to be holding something white in her hand, possibly a piece of driftwood or a small object found on the beach. The overall atmosphere of the video is serene and relaxing, capturing the beauty of nature and the simple pleasure of being by the ocean.</p>
+                    </td>
+                    <td style="width: 25%; vertical-align: top;">
+                        <video src="https://github.com/user-attachments/assets/8d06e702-f80e-4cb2-abc2-b0f519ec3f11" width="100%" controls autoplay loop></video>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
+                        <p>The video features a man sitting in a red armchair, enjoying a cup of coffee or tea. he is dressed in a light-colored outfit and has long dark-haired hair. The setting appears to be indoors, with large windows providing a view of a misty or foggy coastal landscape outside. The room has a modern design with geometric structures visible in the background. There is a small round table next to the armchair, also holding a cup. The overall atmosphere suggests a calm and serene moment, possibly during a cold or rainy day by the sea.</p>
+                    </td>
+                    <td style="width: 25%; vertical-align: top;">
+                        <video src="https://github.com/user-attachments/assets/ab9c655e-84c2-47ed-85d9-039a7f64adfe" width="100%" controls autoplay loop></video>
+                    </td>
+                    <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
+                        <p>The video shows a young boy sitting at a table, eating a piece of food. He appears to be enjoying his meal, as he takes a bite and chews it. The boy is wearing a blue shirt and has short hair. The background is dark, with some light coming from the left side of the frame. There is a straw visible on the right side of the frame, suggesting that there may be a drink next to the boy's plate. The overall atmosphere of the video seems casual and relaxed, with the focus on the boy's enjoyment of his food.</p>
+                    </td>
+                    <td style="width: 25%; vertical-align: top;">
+                        <video src="https://github.com/user-attachments/assets/8014b02e-e1c4-4df7-b7f3-cebfb01fa373" width="100%" controls autoplay loop></video>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
+                        <p>The video captures a boy walking along a city street, filmed in black and white on a classic 35mm camera. His expression is thoughtful, his brow slightly furrowed as if he's lost in contemplation. The film grain adds a textured, timeless quality to the image, evoking a sense of nostalgia. Around him, the cityscape is filled with vintage buildings, cobblestone sidewalks, and softly blurred figures passing by, their outlines faint and indistinct. Streetlights cast a gentle glow, while shadows play across the boy's path, adding depth to the scene. The lighting highlights the boy's subtle smile, hinting at a fleeting moment of curiosity. The overall cinematic atmosphere, complete with classic film still aesthetics and dramatic contrasts, gives the scene an evocative and introspective feel.</p>
+                    </td>
+                    <td style="width: 25%; vertical-align: top;">
+                        <video src="https://github.com/user-attachments/assets/e4bc3169-d3d4-46e2-a667-8b456ead9465" width="100%" controls autoplay loop></video>
+                    </td>
+                    <td style="width: 25%; vertical-align: top; font-size: 0.9em;">
+                        <p>The video features a young man standing outdoors in a snowy park. he is wearing a colorful winter jacket with a floral pattern and a white knit hat. The background shows a snowy landscape with trees, benches, and a metal fence. The ground is covered in snow, and there is a light snowfall in the air. The man appears to be enjoying the winter weather, as he smiles and gives a thumbs-up gesture towards the camera. The overall atmosphere of the video is cheerful and festive, capturing the beauty of a snowy day in a park.</p>
+                    </td>
+                    <td style="width: 25%; vertical-align: top;">
+                        <video src="https://github.com/user-attachments/assets/e4e3e519-95d4-44e0-afa7-9a833f99e090" width="100%" controls autoplay loop></video>
+                    </td>
+                </tr>
+            </table>
+                """)
+                
+    with gr.Row():            
+        gr.Markdown("""
+               <div style="text-align: center;">
+                   <a href="https://huggingface.co/BestWishYsh/ConsisID">🤗 Model Hub</a> |
+                   <a href="https://huggingface.co/datasets/BestWishYsh/ConsisID-preview-Data">📚 Dataset</a> |
+                   <a href="https://github.com/PKU-YuanGroup/ConsisID">🌐 Github</a> |
+                   <a href="https://pku-yuangroup.github.io/ConsisID">📝 Page</a> |
+                   <a href="https://huggingface.co/papers/2411.17440">📜 arxiv </a>
+               </div>
+               <div style="text-align: center; font-size: 15px; font-weight: bold; color: red; margin-bottom: 20px;">
+                ⚠️ This demo is for academic research and experiential use only. 
+                </div>
+               """)
 
     def run(
         prompt,
@@ -372,7 +378,7 @@ with gr.Blocks() as demo:
 
         return video_path, video_update, gif_update, seed_update
 
-    run.zerogpu = True
+    # run.zerogpu = True
     
     generate_button.click(
         fn=run,
