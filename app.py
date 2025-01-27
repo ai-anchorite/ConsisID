@@ -1,5 +1,6 @@
 import math
 import os
+import gc
 import random
 import threading
 import time
@@ -54,7 +55,7 @@ pipe.to(device)
 # Save Memory. Turn on if you don't have multiple GPUs or enough GPU memory(such as H100) and it will cost more time in inference, it may also reduce the quality
 pipe.enable_model_cpu_offload()
 # pipe.enable_sequential_cpu_offload()
-pipe.vae.enable_slicing()
+# pipe.vae.enable_slicing()
 pipe.vae.enable_tiling()
 
 os.makedirs("./output", exist_ok=True)
@@ -107,6 +108,7 @@ def generate(
     ).frames
 
     free_memory()
+    gc.collect()
 
     if scale_status:
         video_pt = upscale_batch_and_concatenate(upscale_model, video_pt, device)
@@ -126,27 +128,27 @@ def generate(
     return (batch_video_frames, seed)
 
 
-def convert_to_gif(video_path):
-    clip = VideoFileClip(video_path)
-    gif_path = video_path.replace(".mp4", ".gif")
-    clip.write_gif(gif_path, fps=8)
-    return gif_path
+# def convert_to_gif(video_path):
+    # clip = VideoFileClip(video_path)
+    # gif_path = video_path.replace(".mp4", ".gif")
+    # clip.write_gif(gif_path, fps=8)
+    # return gif_path
 
 
-def delete_old_files():
-    while True:
-        now = datetime.now()
-        cutoff = now - timedelta(minutes=10)
-        directories = ["./output", "./gradio_tmp"]
+# def delete_old_files():
+    # while True:
+        # now = datetime.now()
+        # cutoff = now - timedelta(minutes=10)
+        # directories = ["./output", "./gradio_tmp"]
 
-        for directory in directories:
-            for filename in os.listdir(directory):
-                file_path = os.path.join(directory, filename)
-                if os.path.isfile(file_path):
-                    file_mtime = datetime.fromtimestamp(os.path.getmtime(file_path))
-                    if file_mtime < cutoff:
-                        os.remove(file_path)
-        time.sleep(600)
+        # for directory in directories:
+            # for filename in os.listdir(directory):
+                # file_path = os.path.join(directory, filename)
+                # if os.path.isfile(file_path):
+                    # file_mtime = datetime.fromtimestamp(os.path.getmtime(file_path))
+                    # if file_mtime < cutoff:
+                        # os.remove(file_path)
+        # time.sleep(600)
 
 
 # threading.Thread(target=delete_old_files, daemon=True).start()
@@ -209,7 +211,7 @@ with gr.Blocks() as demo:
                         enable_scale = gr.Checkbox(label="Super-Resolution (720 × 480 -> 2880 × 1920)", value=False)
                         enable_rife = gr.Checkbox(label="Frame Interpolation (8fps -> 16fps)", value=False)
                     gr.Markdown(
-                        "✨In this demo, we use [RIFE](https://github.com/hzwer/ECCV2022-RIFE) for frame interpolation and [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) for upscaling(Super-Resolution)."
+                        "✨In this demo, we use [RIFE](https://github.com/hzwer/ECCV2022-RIFE) for frame interpolation and [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) for upscaling(Super-Resolution). Running these with the generation will require 64GB+ system RAM."
                     )
 
             generate_button = gr.Button("🎬 Generate Video")
@@ -310,8 +312,8 @@ with gr.Blocks() as demo:
 
         video_path = save_video(batch_video_frames[0], fps=math.ceil((len(batch_video_frames[0]) - 1) / 6))
         video_update = gr.update(visible=True, value=video_path)
-        gif_path = convert_to_gif(video_path)
-        gif_update = gr.update(visible=True, value=gif_path)
+        # gif_path = convert_to_gif(video_path)
+        # gif_update = gr.update(visible=True, value=gif_path)
         seed_update = gr.update(visible=True, value=seed)
 
         return video_path, video_update, seed_update
@@ -324,5 +326,5 @@ with gr.Blocks() as demo:
 
 
 if __name__ == "__main__":
-    demo.queue(max_size=15)
+    # demo.queue(max_size=15)
     demo.launch()
