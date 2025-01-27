@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timedelta
 
 import gradio as gr
-import spaces
+# import spaces
 import torch
 from huggingface_hub import hf_hub_download, snapshot_download
 from models.consisid_utils import prepare_face_models, process_face_embeddings_infer
