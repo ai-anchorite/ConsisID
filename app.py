@@ -53,9 +53,9 @@ if lora_path:
 pipe.to(device)
 # Save Memory. Turn on if you don't have multiple GPUs or enough GPU memory(such as H100) and it will cost more time in inference, it may also reduce the quality
 pipe.enable_model_cpu_offload()
-pipe.enable_sequential_cpu_offload()
-# pipe.vae.enable_slicing()
-# pipe.vae.enable_tiling()
+# pipe.enable_sequential_cpu_offload()
+pipe.vae.enable_slicing()
+pipe.vae.enable_tiling()
 
 os.makedirs("./output", exist_ok=True)
 os.makedirs("./gradio_tmp", exist_ok=True)
@@ -64,7 +64,7 @@ os.makedirs("./gradio_tmp", exist_ok=True)
 upscale_model = load_sd_upscale(f"{model_path}/model_real_esran/RealESRGAN_x4.pth", device)
 frame_interpolation_model = load_rife_model(f"{model_path}/model_rife")
 
-@spaces.GPU(duration=180)
+# @spaces.GPU(duration=180)
 def generate(
     prompt: str,
     image_input: str,
@@ -149,7 +149,7 @@ def delete_old_files():
         time.sleep(600)
 
 
-threading.Thread(target=delete_old_files, daemon=True).start()
+# threading.Thread(target=delete_old_files, daemon=True).start()
 examples_images = [
     ["asserts/example_images/1.png", "A woman adorned with a delicate flower crown, is standing amidst a field of gently swaying wildflowers. Her eyes sparkle with a serene gaze, and a faint smile graces her lips, suggesting a moment of peaceful contentment. The shot is framed from the waist up, highlighting the gentle breeze lightly tousling her hair. The background reveals an expansive meadow under a bright blue sky, capturing the tranquility of a sunny afternoon."],
     ["asserts/example_images/2.png", "The video captures a boy walking along a city street, filmed in black and white on a classic 35mm camera. His expression is thoughtful, his brow slightly furrowed as if he's lost in contemplation. The film grain adds a textured, timeless quality to the image, evoking a sense of nostalgia. Around him, the cityscape is filled with vintage buildings, cobblestone sidewalks, and softly blurred figures passing by, their outlines faint and indistinct. Streetlights cast a gentle glow, while shadows play across the boy's path, adding depth to the scene. The lighting highlights the boy's subtle smile, hinting at a fleeting moment of curiosity. The overall cinematic atmosphere, complete with classic film still aesthetics and dramatic contrasts, gives the scene an evocative and introspective feel."],
@@ -218,7 +218,7 @@ with gr.Blocks() as demo:
             video_output = gr.Video(label="ConsisID Generate Video", width=720, height=480)
             with gr.Row():
                 download_video_button = gr.File(label="📥 Download Video", visible=False)
-                download_gif_button = gr.File(label="📥 Download GIF", visible=False)
+                # download_gif_button = gr.File(label="📥 Download GIF", visible=False)
                 seed_text = gr.Number(label="Seed Used for Video Generation", visible=False)
 
     gr.Markdown("""
@@ -314,12 +314,12 @@ with gr.Blocks() as demo:
         gif_update = gr.update(visible=True, value=gif_path)
         seed_update = gr.update(visible=True, value=seed)
 
-        return video_path, video_update, gif_update, seed_update
+        return video_path, video_update, seed_update
 
     generate_button.click(
         fn=run,
         inputs=[prompt, negative_prompt, image_input, num_inference_steps, seed_param, cfg_param, enable_scale, enable_rife],
-        outputs=[video_output, download_video_button, download_gif_button, seed_text],
+        outputs=[video_output, download_video_button, seed_text],
     )
 
 
